@@ -12,6 +12,16 @@ func ptrToBool(v uintptr)bool{
 	return true
 }
 
-func stringToUintPtr(s string)uintptr{
-	return uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(s)))
+/*
+return uintptr of steing for pass to winapi function and keepalive pointer to the string's buffer.
+Usage:
+sPtr, keepAlive := stringToUintPtr("asd")
+... = winAPI(..., sPtr,...)
+runtime.KeepAlive(keepAlive)
+
+It need for GC doesn't collect converted string before winAPI function return.
+ */
+func stringToUintPtr(s string)(res uintptr,keepAlive *uint16){
+	keepAlive = syscall.StringToUTF16Ptr(s)
+	return uintptr(unsafe.Pointer(keepAlive))
 }

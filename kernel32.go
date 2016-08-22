@@ -4,6 +4,7 @@ import (
 	"syscall"
 	"unsafe"
 	"unicode/utf16"
+	"runtime"
 )
 
 var (
@@ -55,11 +56,13 @@ func GetVolumePathNamesForVolumeName(volumeName string) ([]string, bool, syscall
 	var returnBufLen uint32
 	for {
 		buf := make([]uint16, bufLen)
+		vnWinApiStringPtr, vnKeepAlive :=stringToUintPtr(volumeName)
 		resUintPtr, _, err := procGetVolumePathNamesForVolumeName.Call(
-			stringToUintPtr(volumeName),
+			vnWinApiStringPtr,
 			uintptr(unsafe.Pointer(&buf[0])),
 			uintptr(bufLen),
 			uintptr(unsafe.Pointer(&returnBufLen)))
+		runtime.KeepAlive(vnKeepAlive)
 		errno := err.(syscall.Errno)
 		if !ptrToBool(resUintPtr) {
 			if errno == ERROR_MORE_DATA {
